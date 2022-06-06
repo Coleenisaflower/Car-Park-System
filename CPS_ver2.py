@@ -11,48 +11,108 @@ class Ticket(Frame):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        # class Font:
+        # Configuration:
         self.font = f.Font(family='Bahnschrift', size=10, weight='normal')
+        self.frame = Frame(self)
+        self.frame.grid(row=0, padx=20, pady=10, sticky='NEWS')
+        type_labelframe = LabelFrame(self.frame)
+        type_labelframe.grid(row=0, column=0, columnspan=2, padx=10, pady=10, sticky='')
 
-        ttk.Combobox(self, values=['TWO-WHEELERS', 'FOUR-WHEELERS'], font='Bahnschrift 11 bold', state='readonly').grid(row=0, padx=50, column=0, sticky=W)
-        Label(self, text='#0001', font=self.font).grid(row=0, column=3, sticky=E)
+        ticket_type = IntVar()
+        self.two_wheelers_type = Radiobutton(type_labelframe, text='Two-wheeler', variable=ticket_type, value=2, command=NONE)
+        self.two_wheelers_type.grid(row=0, column=0, padx=20, pady=10)
+
+        self.four_wheelers_type = Radiobutton(type_labelframe, text='Four-wheeler', variable=ticket_type, value=4, command=NONE)
+        self.four_wheelers_type.grid(row=0, column=1, padx=20, pady=10)
+        
+        Label(self.frame, text='#0001', font='Bahnschrift 13 bold').grid(row=0, column=2, padx=30, pady=10, sticky=E)
 
         # Add attendant form:
         options = ['Plate No. :', 'Vehicle Type :', 'Color :']
         row = 1
         for i in range(3):
-            Label(self, text=options[i], font=self.font).grid(row=row, column=1, padx=5, pady=5, sticky=E)
+            Label(self.frame, text=options[i], font=self.font).grid(row=row, column=0, padx=10, pady=5, sticky=E)
             row += 1
 
-        plate_no_ent = Entry(self, width=20)
-        plate_no_ent.grid(row=1, column=2, pady=5, sticky='')
+        plate_no_ent = Entry(self.frame, width=30)
+        plate_no_ent.grid(row=1, column=1, padx=5, pady=5, sticky='')
 
-        car_type_ent = Entry(self, width=20)
-        car_type_ent.grid(row=2, column=2, pady=5, sticky='')
+        car_type_ent = Entry(self.frame, width=30)
+        car_type_ent.grid(row=2, column=1, padx=5, pady=5, sticky='')
 
-        color_ent = Entry(self, width=20)
-        color_ent.grid(row=3, column=2, pady=5, sticky='')
+        color_ent = Entry(self.frame, width=30)
+        color_ent.grid(row=3, column=1, padx=5, pady=5, sticky='')
 
-        self.enter_btn = Button(self, text='Enter',
+        self.enter_btn = Button(self.frame, text='Enter',
                 command=NONE,
                 font=self.font,
                 width=10,
                 fg = '#023047', bg='#98C1D9')
-        self.enter_btn.grid(row=4, column=3, padx=10, sticky=E)
+        self.enter_btn.grid(row=4, column=2, padx=30, pady=10, sticky=E)
 
 
 
-class Count(Frame):
+class Counter(Frame):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        Label(self, text='Spots Left', font='Bahnschrift 15').grid(row=0, column=0, columnspan=2, padx=10, pady=10, sticky='')
+        # Configuration:
+        self.font = f.Font(family='Bahnschrift', size=10, weight='normal')
+
+        Label(self, text='Spots Left', font='Bahnschrift 15 bold').grid(row=0, column=0, columnspan=2, padx=10, pady=10, sticky=W)
 
         Label(self, text='Two-wheelers :', font='Bahnschrift 10').grid(row=1, column=0, padx=10, pady=10, sticky=W)
-        Label(self, text='99', font='Bahnschrift 19 bold').grid(row=1, column=1, padx=10, pady=10, sticky=E)
+        Label(self, text='23', font='Bahnschrift 19 bold').grid(row=1, column=1, padx=10, pady=10, sticky=E)
 
         Label(self, text='Four-wheelers :', font='Bahnschrift 10').grid(row=2, column=0, padx=10, pady=10, sticky=W)
-        Label(self, text='99', font='Bahnschrift 19 bold').grid(row=2, column=1, padx=10, pady=10, sticky=E)
+        Label(self, text='79', font='Bahnschrift 19 bold').grid(row=2, column=1, padx=10, pady=10, sticky=E)
+
+        settings_btn = Button(self, text='SETTINGS',
+                command=self.manageSettings,
+                font='Bahnschrift 10 bold',
+                width=25,
+                fg = '#023047', bg='#98C1D9')
+        settings_btn.grid(row=3, column=0, columnspan=2, padx=10, pady=10, sticky='NEWS')
+
+    
+    def manageSettings(self):
+        self.parking_spot_win = Toplevel(self)
+        self.parking_spot_win.geometry('300x340')
+        self.parking_spot_win.title('System Settings')
+        self.parking_spot_win.config(background='#8ECAE6')
+        self.parking_spot_win.resizable(width=False, height=False)
+
+        two_wheelers_frame = LabelFrame(self.parking_spot_win, text=' Two-Wheeler ', bg='#8ECAE6')
+        two_wheelers_frame.grid(row=0, column=0, padx=25, pady=20, sticky='NEWS')
+
+        four_wheelers_frame = LabelFrame(self.parking_spot_win, text=' Four-Wheeler ', bg='#8ECAE6')
+        four_wheelers_frame.grid(row=1, column=0, padx=25, pady=10, sticky='NEWS')
+
+        Label(two_wheelers_frame, text='No. of spots :', font=self.font, bg='#8ECAE6').grid(row=0, column=0, padx=10, pady=10, sticky=E)
+        Label(two_wheelers_frame, text='Base Fee :', font=self.font, bg='#8ECAE6').grid(row=1, column=0, padx=10, pady=10, sticky=E)
+
+        self.tw_no_of_spots = Entry(two_wheelers_frame, width=20)
+        self.tw_no_of_spots.grid(row=0, column=1, padx=10, pady=10, sticky=W)
+
+        self.tw_fee = Entry(two_wheelers_frame, width=20)
+        self.tw_fee.grid(row=1, column=1, padx=10, pady=10, sticky=W)
+
+        Label(four_wheelers_frame, text='No. of spots :', font=self.font, bg='#8ECAE6').grid(row=0, column=0, padx=10, pady=10, sticky=E)
+        Label(four_wheelers_frame, text='Base Fee :', font=self.font, bg='#8ECAE6').grid(row=1, column=0, padx=10, pady=10, sticky=E)
+
+        self.fw_no_of_spots = Entry(four_wheelers_frame, width=20)
+        self.fw_no_of_spots.grid(row=0, column=1, padx=10, pady=10, sticky=W)
+
+        self.fw_fee = Entry(four_wheelers_frame, width=20)
+        self.fw_fee.grid(row=1, column=1, padx=10, pady=10, sticky=W)
+
+        self.edit_parking_spot = Button(self.parking_spot_win, text='Save',
+                command=NONE,
+                font=self.font,
+                width=10,
+                fg = '#023047', bg='#98C1D9')
+        self.edit_parking_spot.grid(row=3, column=0, pady=10, sticky='')
+        # add "You are abt to change parking spot information. Confirm edit" on save button
 
 
 
@@ -61,16 +121,16 @@ class View(Frame):
         super().__init__(parent, *args, **kwargs)
         Frame.__init__(self, *args, **kwargs)
 
+        # Configuration:
+        self.font = f.Font(family='Bahnschrift', size=10, weight='normal')
         top_frame = Frame(self)
-        top_frame.grid(row=1, padx=20, sticky='NEWS')
+        top_frame.grid(row=1, padx=20, pady=20, sticky='NEWS')
         self.treeview_frame = Frame(self)
         self.treeview_frame.grid(row=2, padx=20, sticky='NEWS')
         bottom_frame = Frame(self)
-        bottom_frame.grid(row=3, padx=20, sticky='NEWS')
+        bottom_frame.grid(row=3, padx=20, pady=20, sticky='NEWS')
 
-        # class Font:
-        self.font = f.Font(family='Bahnschrift', size=10, weight='normal')
-
+        # Widgets:
         search_ent = Entry(top_frame, width=20)
         search_ent.grid(row=0, column=0, sticky=W)
 
@@ -109,13 +169,13 @@ class View(Frame):
     def treeviewTable(self):
         # Scrollbar:
         scrollbar = Scrollbar(self.treeview_frame, orient=VERTICAL)
-        scrollbar.grid(row=0, column=1, pady=10, sticky=N+S)
+        scrollbar.grid(row=0, column=1, sticky=N+S)
 
         # Treeview table declaration:
         self.table = ttk.Treeview(self.treeview_frame)
         #self.table.bind('<Double-1>', self.selectStudent)
         self.table.configure(yscrollcommand=scrollbar.set)
-        self.table.grid(row=0, column=0, pady=10, sticky='NEWS')
+        self.table.grid(row=0, column=0, sticky='NEWS')
 
         # Treeview style:
         style = ttk.Style()
@@ -139,28 +199,28 @@ class View(Frame):
 
             if count == 0:    # to create the headings:
                 # Load column headings:
-                self.table['columns'] = (row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+                self.table['columns'] = (row[0], row[1], row[2], row[3], row[4], row[5], row[6])
                 # Column configure:
                 self.table.column('#0', width=0, stretch=NO)
                 i = 0
-                while i <= 7:
+                while i <= 6:
                     if i == 2 or i == 3:    # anchor PLATE NO to west
-                        self.table.column(row[i], anchor=W, width=100)
+                        self.table.column(row[i], anchor=W, width=120)
                         i += 1
                     else:
-                        self.table.column(row[i], anchor=CENTER, width=80)
+                        self.table.column(row[i], anchor=CENTER, width=90)
                         i += 1
                 # Headings:
                 self.table.heading('#0', text='', anchor=CENTER) 
                 j = 0
-                while j <= 7:
+                while j <= 6:
                     self.table.heading(row[j], text=row[j], anchor=CENTER)
                     j += 1
             
                 count += 1
             else:           # CPS data:
                 self.table.insert(parent='', index='end', iid=self.id, text='',
-                values=(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7]))
+                values=(row[0], row[1], row[2], row[3], row[4], row[5], row[6]))
                 self.id += 1
         
         file.close()
@@ -176,7 +236,7 @@ class Menu(Frame):
         self.config(background='gray17')
 
         self.spot_menu = Button(self, text='Settings',
-                command=self.manageSettings,
+                command=NONE,
                 font=self.font,
                 width=15,
                 fg = '#023047', bg='#98C1D9')
@@ -195,45 +255,6 @@ class Menu(Frame):
                 width=15,
                 fg = '#023047', bg='#98C1D9')
         self.change_menu.grid(row=2, pady=5, sticky=S)
-
-    def manageSettings(self):
-        self.parking_spot_win = Toplevel(self)
-        self.parking_spot_win.geometry('400x300')
-        self.parking_spot_win.title('Parking Spot')
-        self.parking_spot_win.config(background='#8ECAE6')
-        self.parking_spot_win.resizable(width=False, height=False)
-
-        two_wheelers_frame = LabelFrame(self.parking_spot_win, text='Two-Wheelers')
-        two_wheelers_frame.grid(row=0, column=0, sticky='')
-
-        four_wheelers_frame = LabelFrame(self.parking_spot_win, text='Four-Wheelers')
-        four_wheelers_frame.grid(row=1, column=0, sticky='')
-
-        Label(two_wheelers_frame, text='No. of spots :', font=self.font, bg='#8ECAE6').grid(row=0, column=0, padx=20, pady=5, sticky=E)
-        Label(two_wheelers_frame, text='Base Fee :', font=self.font, bg='#8ECAE6').grid(row=1, column=0, padx=20, pady=5, sticky=E)
-
-        self.tw_no_of_spots = Entry(two_wheelers_frame, width=20)
-        self.tw_no_of_spots.grid(row=0, column=1, pady=5, sticky=W)
-
-        self.tw_fee = Entry(two_wheelers_frame, width=5)
-        self.tw_fee.grid(row=1, column=1, pady=20, sticky=W)
-
-        Label(four_wheelers_frame, text='No. of spots :', font=self.font, bg='#8ECAE6').grid(row=0, column=0, padx=20, pady=5, sticky=E)
-        Label(four_wheelers_frame, text='Base Fee :', font=self.font, bg='#8ECAE6').grid(row=1, column=0, padx=20, pady=5, sticky=E)
-
-        self.fw_no_of_spots = Entry(four_wheelers_frame, width=20)
-        self.fw_no_of_spots.grid(row=0, column=1, pady=5, sticky=W)
-
-        self.fw_fee = Entry(four_wheelers_frame, width=5)
-        self.fw_fee.grid(row=1, column=1, pady=20, sticky=W)
-
-        self.edit_parking_spot = Button(self.parking_spot_win, text='Save',
-                command=NONE,
-                font=self.font,
-                width=10,
-                fg = '#023047', bg='#98C1D9')
-        self.edit_parking_spot.grid(row=3, column=0, pady=10, sticky=E)
-        # add "You are abt to change parking spot information. Confirm edit" on save button
 
 
     def manageAttendants(self):
@@ -422,15 +443,15 @@ class System(Tk):
 
         # Main window properties:
         self.title('Car Park System')
-        self.geometry('1000x600') # WxH
+        self.geometry('800x730') # WxH
         self.config(background='gray17')
         self.resizable(width=False, height=False)
 
         # Frames:
         Ticket(self).grid(row=0, column=0, padx=20, pady=30, sticky=W+E)
-        Count(self).grid(row=0, column=1, padx=20, pady=30, sticky=W+E)
-        View(self).grid(row=1, column=0, padx=20, sticky=W+E)
-        Menu(self).grid(row=1, column=1, padx=20, sticky=S)
+        Counter(self).grid(row=0, column=1, padx=20, pady=30, sticky=W+E)
+        View(self).grid(row=1, column=0, columnspan=2, padx=20, sticky=W+E)
+        #Menu(self).grid(row=1, column=1, padx=20, sticky=S)
 
 
 
