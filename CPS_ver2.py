@@ -68,6 +68,7 @@ class Ticket(Frame):
                                 width=10,
                                 fg='#023047', bg='#ecb365')
         self.enter_btn.grid(row=3, column=2, padx=30, pady=10, sticky=W)
+        
 
 
 class Counter(Frame):
@@ -140,6 +141,7 @@ class Counter(Frame):
                                         fg='#023047', bg='#ecb365')
         self.edit_parking_spot.grid(row=3, column=0, pady=10, sticky='')
         # add "You are abt to change system settings information. Confirm edit" on save button
+
 
 
 class View(Frame):
@@ -236,15 +238,14 @@ class View(Frame):
         # Get current date and time:
         timestamp = datetime.datetime.now()
 
-        # Save data to db:
+        # Get datetime_issued from db:
         connect = sqlite3.connect('CPS\cps.db')
         c = connect.cursor()
-        c.execute('UPDATE TICKET SET datetime_checkout=(?) WHERE ticket_no=(?)', (timestamp, val[0]))
         c.execute('SELECT datetime_issued FROM TICKET WHERE ticket_no=(?)', (val[0],))
         dt_issued = c.fetchone()
         connect.commit()
         
-        # Getting now and then datetime from current and db, respectively
+        # now and then datetime declaration:
         temp = dt_issued[0]
         dt_format = "%Y-%m-%d %H:%M:%S"
         then = datetime.datetime.strptime(temp, dt_format)
@@ -260,8 +261,9 @@ class View(Frame):
         total_fee = base_fee + (added_fee * duration)
         total_fee = round(total_fee, 2)
 
-        # Insert total_fee into db:
-        c.execute('UPDATE TICKET SET total_fee=(?) WHERE ticket_no=(?)', (total_fee, val[0]))
+        # Save datetime_checkout and total_fee into db:
+        c.execute('INSERT INTO PAYS (datetime_checkout, total_fee) VALUES (?, ?)', (timestamp, total_fee))
+        c.execute('UPDATE TICKET SET datetime_checkout=(?), total_fee=(?) WHERE ticket_no=(?)', (timestamp, total_fee, val[0]))
         connect.commit()
         
         # Refresh Treeview:
