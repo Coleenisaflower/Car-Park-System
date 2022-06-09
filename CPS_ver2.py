@@ -1,9 +1,12 @@
 #from msilib.schema import SelfReg
 from tkinter import *
 from tkinter import ttk
+from datetime import datetime
+from datetime import timedelta
 import tkinter.font as f
 import tkinter as tk
 import sqlite3
+import datetime
 
 
 class Ticket(Frame):
@@ -136,7 +139,7 @@ class Counter(Frame):
                                         width=10,
                                         fg='#023047', bg='#ecb365')
         self.edit_parking_spot.grid(row=3, column=0, pady=10, sticky='')
-        # add "You are abt to change parking spot information. Confirm edit" on save button
+        # add "You are abt to change system settings information. Confirm edit" on save button
 
 
 class View(Frame):
@@ -159,18 +162,18 @@ class View(Frame):
 
         # WIDGETS:
 
-        search_ent = Entry(top_frame, width=20)
-        search_ent.grid(row=0, column=0, sticky=W)
+        self.search_ent = Entry(top_frame, width=20)
+        self.search_ent.grid(row=0, column=0, sticky=W)
 
         self.search_btn = Button(top_frame, text='Search',
-                                 command=NONE,
+                                 command=self.search,
                                  font=self.font,
                                  width=15,
                                  fg='#023047', bg='#ecb365')
         self.search_btn.grid(row=0, column=1, sticky=W)
 
         self.timeout_btn = Button(top_frame, text='Time Out',
-                                  command=NONE,
+                                  command=self.timeOut,
                                   font=self.font,
                                   width=15,
                                   fg='#023047', bg='#ecb365')
@@ -180,7 +183,7 @@ class View(Frame):
         self.treeviewTable()
 
         self.reload_ticket_btn = Button(bottom_frame, text='Refresh',
-                                        command=NONE,
+                                        command=self.reload,
                                         font=self.font,
                                         width=10,
                                         fg='#023047', bg='#ecb365')
@@ -195,6 +198,101 @@ class View(Frame):
 
     # FUNCTIONS:
 
+    def search(self):
+        key = self.search_ent.get().upper()
+        # Get data from db:
+        connect = sqlite3.connect('CPS\cps.db')
+        c = connect.cursor()
+        c.execute("SELECT ticket_no, ticket_type, plate_no, color, vehicle_type, datetime_issued, datetime_checkout, total_fee FROM TICKET INNER JOIN VEHICLE on VEHICLE.v_plate_no = TICKET.plate_no WHERE plate_no LIKE (?) OR ticket_no LIKE (?) ORDER BY ticket_no DESC", ('%'+key+'%', '%'+key+'%'))
+        table = c.fetchall()
+        # Commit our query:
+        connect.commit()
+
+        # Clear Treeview table:
+        self.clearTreeview()
+
+        # Fill table with search results:
+        for row in table:
+            self.table.insert(parent='', index='end', iid=self.id, text='',
+            values=(row[0], row[1], row[2], row[3] + ' ' + row[4], row[5], row[6], row[7]))
+            self.id += 1
+
+        #self.search_ent.delete(0, END)
+        connect.close()
+    
+    
+    def clearTreeview(self):
+        # Clear treeview table:
+        for row in self.table.get_children():
+            self.table.delete(row)
+    
+    
+    def timeOut(self):
+        # Grab row number:
+        selection = self.table.focus()
+        # Grab selected row:
+        val = self.table.item(selection, 'values')
+
+        # Get current date and time:
+        timestamp = datetime.datetime.now()
+
+        # Save data to db:
+        connect = sqlite3.connect('CPS\cps.db')
+        c = connect.cursor()
+        c.execute('UPDATE TICKET SET datetime_checkout=(?) WHERE ticket_no=(?)', (timestamp, val[0]))
+        c.execute('SELECT datetime_issued FROM TICKET WHERE ticket_no=(?)', (val[0],))
+        dt_issued = c.fetchone()
+        connect.commit()
+        
+        # Getting now and then datetime from current and db, respectively
+        temp = dt_issued[0]
+        dt_format = "%Y-%m-%d %H:%M:%S"
+        then = datetime.datetime.strptime(temp, dt_format)
+        now = timestamp
+
+        # Datetime computation:
+        time_difference = now - then
+        duration = time_difference.total_seconds() / 3600
+
+        # Total fee computation:
+        base_fee = 50
+        added_fee = 25
+        total_fee = base_fee + (added_fee * duration)
+        total_fee = round(total_fee, 2)
+
+        # Insert total_fee into db:
+        c.execute('UPDATE TICKET SET total_fee=(?) WHERE ticket_no=(?)', (total_fee, val[0]))
+        connect.commit()
+        
+        # Refresh Treeview:
+        self.reload()
+        connect.close()
+    
+    
+    def reload(self):
+        # Clear Treeview table:
+        self.clearTreeview()
+
+        # Get data from db:
+        connect = sqlite3.connect('CPS\cps.db')
+        c = connect.cursor()
+        c.execute("SELECT ticket_no, ticket_type, plate_no, color, vehicle_type, datetime_issued, datetime_checkout, total_fee FROM TICKET INNER JOIN VEHICLE on VEHICLE.v_plate_no = TICKET.plate_no ORDER BY ticket_no DESC")
+        table = c.fetchall()
+
+        # Commit our query:
+        connect.commit()
+       
+        # Insert data from db:
+        self.id = 0
+        for row in table:
+            self.table.insert(parent='', index='end', iid=self.id, text='',
+            values=(row[0], row[1], row[2], row[3] + ' ' + row[4], row[5], row[6], row[7]))
+            self.id += 1
+
+        self.search_ent.delete(0, END)
+        connect.close()
+    
+    
     def treeviewTable(self):
         # Scrollbar:
         scrollbar = Scrollbar(self.treeview_frame, orient=VERTICAL)
@@ -202,7 +300,6 @@ class View(Frame):
 
         # Treeview table declaration:
         self.table = ttk.Treeview(self.treeview_frame)
-        # self.table.bind('<Double-1>', self.selectStudent)
         self.table.configure(yscrollcommand=scrollbar.set)
         self.table.grid(row=0, column=0, sticky='NEWS')
 
@@ -220,9 +317,9 @@ class View(Frame):
         # Scrollbar config:
         scrollbar.config(command=self.table.yview)
 
-        #Column declaration
+        # Column declaration:
         self.table['columns'] = ('Ticket #', 'Wheels', 'Plate No.', 'Desc', 'Time In', 'Time Out', 'Fee')
-        #Column configure
+        # Column configure:
         self.table.column('#0', width=0, stretch=NO)
         self.table.column('Ticket #', anchor=CENTER, width=70)
         self.table.column('Wheels', anchor=CENTER, width=90)
@@ -231,7 +328,7 @@ class View(Frame):
         self.table.column('Time In', anchor=CENTER, width=130)
         self.table.column('Time Out', anchor=CENTER, width=130)
         self.table.column('Fee', anchor=E, width=70)
-        #Assign headings
+        # Assign headings:
         self.table.heading('#0', text='', anchor=CENTER)
         self.table.heading('Ticket #', text='Ticket #', anchor=CENTER)
         self.table.heading('Wheels', text='Wheels', anchor=CENTER)
@@ -241,16 +338,16 @@ class View(Frame):
         self.table.heading('Time Out', text='Time Out', anchor=CENTER)
         self.table.heading('Fee', text='Fee', anchor=CENTER)
 
-        #Get data from db
+        # Get data from db:
         connect = sqlite3.connect('CPS\cps.db')
         c = connect.cursor()
-        c.execute("SELECT ticket_no, ticket_type, plate_no, color, vehicle_type, datetime_issued, datetime_checkout, total_fee FROM TICKET INNER JOIN VEHICLE on VEHICLE.v_plate_no = TICKET.plate_no")
+        c.execute("SELECT ticket_no, ticket_type, plate_no, color, vehicle_type, datetime_issued, datetime_checkout, total_fee FROM TICKET INNER JOIN VEHICLE on VEHICLE.v_plate_no = TICKET.plate_no ORDER BY ticket_no DESC")
         table = c.fetchall()
 
-        #Commit our query
+        # Commit our query:
         connect.commit()
        
-        #Insert data from db
+        # Insert data from db:
         self.id = 0
         for row in table:
             self.table.insert(parent='', index='end', iid=self.id, text='',
