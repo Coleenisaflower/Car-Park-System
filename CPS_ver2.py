@@ -1,4 +1,5 @@
 #from msilib.schema import SelfReg
+from multiprocessing.dummy import freeze_support
 from tkinter import *
 from tkinter import ttk
 from datetime import datetime
@@ -203,9 +204,9 @@ class View(Frame):
     def search(self):
         key = self.search_ent.get().upper()
         # Get data from db:
-        connect = sqlite3.connect('CPS\cps.db')
+        connect = sqlite3.connect('cps.db')
         c = connect.cursor()
-        c.execute("SELECT ticket_no, ticket_type, plate_no, color, vehicle_type, datetime_issued, datetime_checkout, total_fee FROM TICKET INNER JOIN VEHICLE on VEHICLE.v_plate_no = TICKET.plate_no WHERE plate_no LIKE (?) OR ticket_no LIKE (?) ORDER BY ticket_no DESC", ('%'+key+'%', '%'+key+'%'))
+        c.execute("SELECT ticket_no, ticket_type, plate_no, color, vehicle_type, datetime_issued, datetime_checkout, total_fee FROM TICKET INNER JOIN VEHICLE on VEHICLE.v_plate_no = TICKET.plate_no LEFT JOIN PAYS on PAYS.p_ticket_no = TICKET.ticket_no WHERE plate_no LIKE (?) OR ticket_no LIKE (?) ORDER BY ticket_no DESC", ('%'+key+'%', '%'+key+'%'))
         table = c.fetchall()
         # Commit our query:
         connect.commit()
@@ -239,7 +240,7 @@ class View(Frame):
         timestamp = datetime.datetime.now()
 
         # Get datetime_issued from db:
-        connect = sqlite3.connect('CPS\cps.db')
+        connect = sqlite3.connect('cps.db')
         c = connect.cursor()
         c.execute('SELECT datetime_issued FROM TICKET WHERE ticket_no=(?)', (val[0],))
         dt_issued = c.fetchone()
@@ -247,6 +248,8 @@ class View(Frame):
         
         # now and then datetime declaration:
         temp = dt_issued[0]
+        print('temp> ')
+        print(temp)
         dt_format = "%Y-%m-%d %H:%M:%S"
         then = datetime.datetime.strptime(temp, dt_format)
         now = timestamp
@@ -255,30 +258,47 @@ class View(Frame):
         time_difference = now - then
         duration = time_difference.total_seconds() / 3600
 
-        # Total fee computation:
-        base_fee = 50
-        added_fee = 25
-        total_fee = base_fee + (added_fee * duration)
-        total_fee = round(total_fee, 2)
-
-        # Save datetime_checkout and total_fee into db:
-        c.execute('INSERT INTO PAYS (datetime_checkout, total_fee) VALUES (?, ?)', (timestamp, total_fee))
-        c.execute('UPDATE TICKET SET datetime_checkout=(?), total_fee=(?) WHERE ticket_no=(?)', (timestamp, total_fee, val[0]))
-        connect.commit()
+        # Get base_fee and added_fee:
+        fees = []
+        if val[1] == 'FOUR':
+            c.execute('SELECT fw_base_fee, fw_added_fee FROM SYSTEM_SETTINGS')
+            fees = c.fetchone()
+            self.totalFee(timestamp, val[0], duration, fees[0], fees[1])
+        elif val[1] == 'TWO':
+            c.execute('SELECT tw_base_fee, tw_added_fee FROM SYSTEM_SETTINGS')
+            fees = c.fetchone()
+            self.totalFee(timestamp, val[0], duration, fees[0], fees[1])
         
         # Refresh Treeview:
         self.reload()
         connect.close()
     
     
+    def totalFee(self, timestamp, ticket_no, duration, base_fee, added_fee):
+        # Total fee computation:
+        if duration <= 1:
+            total_fee = base_fee
+        else:
+            total_fee = base_fee + (added_fee * (duration-1))
+            total_fee = round(total_fee, 2)
+
+        # Save datetime_checkout and total_fee into db:
+        connect = sqlite3.connect('cps.db')
+        c = connect.cursor()
+        c.execute('INSERT INTO PAYS (p_ticket_no, checkout, total_fee) VALUES (?, ?, ?)', (ticket_no, timestamp, total_fee))
+        c.execute('UPDATE TICKET SET datetime_checkout=(?) WHERE ticket_no=(?)', (timestamp, ticket_no))
+        connect.commit()
+        connect.close()
+
+
     def reload(self):
         # Clear Treeview table:
         self.clearTreeview()
 
         # Get data from db:
-        connect = sqlite3.connect('CPS\cps.db')
+        connect = sqlite3.connect('cps.db')
         c = connect.cursor()
-        c.execute("SELECT ticket_no, ticket_type, plate_no, color, vehicle_type, datetime_issued, datetime_checkout, total_fee FROM TICKET INNER JOIN VEHICLE on VEHICLE.v_plate_no = TICKET.plate_no ORDER BY ticket_no DESC")
+        c.execute("SELECT ticket_no, ticket_type, plate_no, color, vehicle_type, datetime_issued, datetime_checkout, total_fee FROM TICKET INNER JOIN VEHICLE on VEHICLE.v_plate_no = TICKET.plate_no LEFT JOIN PAYS on PAYS.p_ticket_no = TICKET.ticket_no ORDER BY ticket_no DESC")
         table = c.fetchall()
 
         # Commit our query:
@@ -341,9 +361,9 @@ class View(Frame):
         self.table.heading('Fee', text='Fee', anchor=CENTER)
 
         # Get data from db:
-        connect = sqlite3.connect('CPS\cps.db')
+        connect = sqlite3.connect('cps.db')
         c = connect.cursor()
-        c.execute("SELECT ticket_no, ticket_type, plate_no, color, vehicle_type, datetime_issued, datetime_checkout, total_fee FROM TICKET INNER JOIN VEHICLE on VEHICLE.v_plate_no = TICKET.plate_no ORDER BY ticket_no DESC")
+        c.execute("SELECT ticket_no, ticket_type, plate_no, color, vehicle_type, datetime_issued, datetime_checkout, total_fee FROM TICKET INNER JOIN VEHICLE on VEHICLE.v_plate_no = TICKET.plate_no LEFT JOIN PAYS on PAYS.p_ticket_no = TICKET.ticket_no ORDER BY ticket_no DESC")
         table = c.fetchall()
 
         # Commit our query:
