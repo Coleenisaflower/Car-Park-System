@@ -1,4 +1,5 @@
 # from msilib.schema import SelfReg
+from msilib.schema import Error
 from multiprocessing.dummy import freeze_support
 from tkinter import *
 from tkinter import ttk, messagebox
@@ -9,6 +10,7 @@ import tkinter as tk
 import sqlite3
 import datetime
 import time as tm
+from xml.dom.expatbuilder import theDOMImplementation
 
 class Ticket(Frame): 
     def __init__(self, *args, **kwargs):
@@ -72,13 +74,13 @@ class Ticket(Frame):
       
     #Amity's code
     def on_clickEnter(self):
-        self.platenum = self.plate_no_ent.get()
-        self.vehicle_description = self.vehicle_desc.get()
-        self.color = self.color_ent.get()
+        self.platenum = self.plate_no_ent.get().upper()
+        self.vehicle_description = self.vehicle_desc.get().upper()
+        self.color = self.color_ent.get().upper()
         if (len(self.plate_no_ent.get()) == 0 or len(self.vehicle_desc.get()) == 0 or len(self.color_ent.get()) == 0 or self.radiobutton_value == None):
             messagebox.showinfo('Error', 'Please fill the remaining entries')
             return
-        timestamp = datetime.datetime.now()
+        timestamp = datetime.datetime.now().replace(microsecond=0)
         
         connection = sqlite3.connect('cps.db')
         c = connection.cursor()
@@ -88,9 +90,11 @@ class Ticket(Frame):
         except AttributeError:
             messagebox.showinfo('Error', 'Please fill the remaining entries')
             return
+            
         connection.commit()
         connection.close()
         self.on_clickClear()
+        
         messagebox.showinfo('Success!', 'Ticket has been added')
         
     def on_clickClear(self):
@@ -238,7 +242,6 @@ class Counter(Frame):
                                         width=10,
                                         fg='#023047', bg='#ecb365')
         self.edit_parking_spot.grid(row=3, column=0, pady=10, sticky='')
-        # add "You are abt to change parking spot information. Confirm edit" on save button
 
     def settings_clear(self):
         self.no_of_spots_tw.set('')
@@ -320,6 +323,8 @@ class View(Frame):
                            width=15, relief=FLAT,
                            fg='#ecb365', bg='#002b3c')
         self.clock.grid(row=0, column=3, sticky=W)
+        
+        # Call clock:
         self.current_time()
 
         # Call treeview table:
@@ -375,6 +380,10 @@ class View(Frame):
         for row in self.table.get_children():
             self.table.delete(row)
 
+    def reloadTrigger(i):
+        if i == 1:
+            View.reload()
+    
     def timeOut(self):
         # Grab row number:
         selection = self.table.focus()
@@ -382,7 +391,7 @@ class View(Frame):
         val = self.table.item(selection, 'values')
 
         # Get current date and time:
-        timestamp = datetime.datetime.now()
+        timestamp = datetime.datetime.now().replace(microsecond=0)
 
         # Get datetime_issued from db:
         connect = sqlite3.connect('cps.db')
@@ -392,9 +401,11 @@ class View(Frame):
         connect.commit()
 
         # now and then datetime declaration:
+        #'''
         temp = dt_issued[0]
         dt_format = "%Y-%m-%d %H:%M:%S"
         then = datetime.datetime.strptime(temp, dt_format)
+        #'''
         now = timestamp
 
         # Datetime computation:
