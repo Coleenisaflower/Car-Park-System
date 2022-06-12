@@ -25,6 +25,9 @@ class Ticket(Frame):
         type_labelframe = LabelFrame(self.frame, bg='#002b3c')
         type_labelframe.grid(row=0, column=0, columnspan=2, padx=10, pady=10, sticky='')
 
+        global catch_last_ticket
+        catch_last_ticket= 16
+
         # WIDGETS:
 
         # Ticket type:
@@ -38,7 +41,6 @@ class Ticket(Frame):
         self.two_wheelers_type.config(bg='#002b3c')
         self.two_wheelers_type.grid(row=0, column=0, padx=20, pady=10)
 
-        self.ticketnumber = 5
         self.four_wheelers_type = Radiobutton(type_labelframe, text='Four-wheeler',
                     variable=self.radiobutton_value,
                     value=4,
@@ -48,7 +50,9 @@ class Ticket(Frame):
         self.four_wheelers_type.config(bg='#002b3c')
         self.four_wheelers_type.grid(row=0, column=1, padx=20, pady=10)
 
-        
+        self.ticket = Label(self.frame, text='16', font='Bahnschrift 20 bold', bg='#002b3c', fg='white')
+        self.ticket.grid(row=0, column=2, padx=0, pady=10, sticky=S)
+
         # Add ticket form:
         options = ['Plate No. :', 'Vehicle Model' ,'Color :']
         row = 1
@@ -87,13 +91,23 @@ class Ticket(Frame):
         try:
             c.execute("INSERT INTO VEHICLE VALUES (?, ?, ?)" , (self.platenum, self.color, self.vehicle_description))
             c.execute("INSERT INTO TICKET (plate_no,ticket_type, datetime_issued) VALUES(?, ?, ?)", (self.platenum, self.ticket_type, timestamp))
+            connection.commit() 
         except AttributeError:
             messagebox.showinfo('Error', 'Please fill the remaining entries')
             return
             
+        c.execute("SELECT ticket_no FROM TICKET WHERE ticket_no = (?)", (catch_last_ticket,))
+        catch = c.fetchone()
+        last_t = catch[0] + 1
+        catch_last_ticket = last_t
+
+        self.ticket.config(text=last_t)
+
         connection.commit()
         connection.close()
         self.on_clickClear()
+        decrement = Counter()
+        decrement.update_spots(self.ticket_type)
         
         messagebox.showinfo('Success!', 'Ticket has been added')
         
@@ -126,6 +140,10 @@ class Counter(Frame):
         self.added_fee_fw = DoubleVar()
 
         # Configuration:
+        self.tw_counter = 0
+        self.fw_counter = 0
+        self.tw_next = 0
+        self.fw_next = 0
         self.config(background='#002b3c')
         self.font = f.Font(family='Bahnschrift', size=10, weight='normal')
 
@@ -140,13 +158,19 @@ class Counter(Frame):
         self.tw = Label(self, text='Two-wheeler :', font='CenturyGothic 10 bold', background='#002b3c', fg='white')
         self.tw.grid(row=1,column=0, padx=10, pady=10, sticky=W)
 
-        self.no_tw = Label(self, text='23', font='Bahnschrift 19 bold', background='#002b3c', fg='white')
+        connect = sqlite3.connect('cps.db')
+        c = connect.cursor()
+        c.execute("SELECT fw_spots, tw_spots FROM SYSTEM_SETTINGS")
+        spots = c.fetchone()
+        connect.commit()
+
+        self.no_tw = Label(self, text=spots[1], font='Bahnschrift 19 bold', background='#002b3c', fg='white')
         self.no_tw.grid(row=1, column=1, padx=10, pady=10,  sticky=E)
 
         self.fw = Label(self, text='Four-wheeler :', font='CenturyGothic 10 bold', background='#002b3c', fg='white')
         self.fw.grid(row=2,column=0,padx=10,pady=10,sticky=W)
 
-        self.no_fw = Label(self, text='79', font='Bahnschrift 19 bold', background='#002b3c', fg='white')
+        self.no_fw = Label(self, text=spots[0], font='Bahnschrift 19 bold', background='#002b3c', fg='white')
         self.no_fw.grid(row=2, column=1,padx=10, pady=10, sticky=E)
 
         settings_btn = Button(self, text='SETTINGS',
@@ -154,12 +178,79 @@ class Counter(Frame):
                               font='Bahnschrift 10 bold',
                               width=25,
                               fg='#023047', bg='#ecb365')
-        settings_btn.grid(row=3, column=0, columnspan=2, padx=10, pady=10, sticky='NEWS')
+        settings_btn.grid(row=3, column=0, padx=10, pady=10, sticky='NEWS')
+
+        update_btn = Button(self, text='UPDATE',
+                              command=self.update,
+                              font='Bahnschrift 10 bold',
+                              width=25,
+                              fg='#023047', bg='#ecb365')
+        update_btn.grid(row=3, column=1, padx=10, pady=10, sticky='NEWS')
+        
+        connect.close()
         #self.update_spots()
 
     # FUNCTIONS:
 
+    def updateTwSpots(self):
+        tw_spots_left = 0
+        tw_spots = 0
+        if self.tw_counter==0:
+            connect = sqlite3.connect('cps.db')
+            c = connect.cursor()
+            c.execute(
+                "SELECT tw_spots FROM SYSTEM_SETTINGS")
+            spots = c.fetchone()
+
+            tw_spots = spots[0]
+            tw_spots_left = tw_spots - 1
+            self.tw_next = tw_spots_left
+            print(self.tw_next)
+            self.no_tw.config(text=str(tw_spots_left))
+
+            connect.commit()
+            connect.close()
+            self.tw_counter += 1
+            return self.tw_next
+        else:
+            self.tw_next = self.tw_next - 1
+            self.no_tw.config(text=str(self.tw_next))
+
+
+    def updateFwSpots(self):
+        fw_spots_left = 0
+        fw_spots = 0
+        if self.fw_counter==0:
+            connect = sqlite3.connect('cps.db')
+            c = connect.cursor()
+            c.execute(
+                "SELECT fw_spots FROM SYSTEM_SETTINGS")
+            spots = c.fetchone()
+
+            fw_spots = spots[0]
+            fw_spots_left = fw_spots - 1
+            self.fw_next = fw_spots_left
+            print(self.fw_next)
+            self.no_fw.config(text=str(fw_spots_left))
+            
+            connect.commit()
+            connect.close()
+            self.fw_counter += 1
+            return self.fw_next
+        else:
+            self.fw_next = self.fw_next - 1
+            self.no_fw.config(text=str(self.fw_next))
+    
+
+    def update_spots(self, ticket_type):
+        if ticket_type == 'TWO':
+            self.updateTwSpots()
+        elif ticket_type == 'FOUR':
+            self.updateFwSpots()
+        
+
     def manageSettings(self):
+        self.update_spots('FOUR')
         global row
         self.settings_clear()
         self.parking_spot_win = Toplevel(self)
@@ -275,10 +366,6 @@ class Counter(Frame):
 
             self.parking_spot_win.destroy()
 
-    def update_spots(self):
-        tw = int(self.no_of_spots_tw.get())
-        spots = 100 - tw
-        self.no_spots.config(text=spots)
 
 
 class View(Frame):
@@ -469,6 +556,7 @@ class View(Frame):
         connect.close()
 
     def delete(self):
+        Ticket.catch_last_ticket += 1
         # Grab row number:
         selection = self.table.focus()
         # Grab selected row:
