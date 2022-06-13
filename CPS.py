@@ -23,7 +23,7 @@ class System(Tk):
         self.config(background='#051b33')
         self.resizable(width=False, height=False)
 
-        Body(self).grid(row=0, column=0, sticky=W+E)
+        Body(self).grid(row=0, column=0, sticky=W + E)
 
 
 class Body(tk.Frame):
@@ -33,11 +33,11 @@ class Body(tk.Frame):
         self.config(background='#051b33')
 
         self.top_left = Frame(self, bg='#002b3c')
-        self.top_left.grid(row=0, column=0, padx=20, pady=20, sticky=W+E)
+        self.top_left.grid(row=0, column=0, padx=20, pady=20, sticky=W + E)
         self.top_right = Frame(self, bg='#002b3c')
-        self.top_right.grid(row=0, column=1, padx=20, pady=20, sticky=W+E)
+        self.top_right.grid(row=0, column=1, padx=20, pady=20, sticky=W + E)
         self.bottom = Frame(self, bg='#002b3c')
-        self.bottom.grid(row=1, column=0, columnspan=2, padx=20, pady=20, sticky=W+E)
+        self.bottom.grid(row=1, column=0, columnspan=2, padx=20, pady=20, sticky=W + E)
 
         self.top_frame = Frame(self.bottom)
         self.top_frame.config(background='#002b3c')
@@ -47,14 +47,14 @@ class Body(tk.Frame):
         self.treeview_frame.grid(row=2, padx=20, sticky='NEWS')
         self.bottom_frame = Frame(self.bottom)
         self.bottom_frame.config(background='#002b3c')
-        self.bottom_frame.grid(row=3, padx=20, pady=10,sticky='NEWS')
+        self.bottom_frame.grid(row=3, padx=20, pady=10, sticky='NEWS')
 
         self.font = f.Font(family='Bahnschrift', size=10, weight='normal')
-        
+
         # VARIALE DECLARATIONS------------------------------------------------------------------------------------
-      
+
         self.catch_last_ticket = 16
-        
+
         self.tw_label = StringVar()
         self.fw_label = StringVar()
 
@@ -71,9 +71,8 @@ class Body(tk.Frame):
         self.tw_next = 0
         self.fw_next = 0
 
-
         # WIDGETS-------------------------------------------------------------------------------------------------
-        
+
         # TICKET WIDGETS:
         self.radiobutton_value = IntVar()
         self.two_wheelers_type = Radiobutton(self.top_left, text='Two-wheeler',
@@ -101,9 +100,11 @@ class Body(tk.Frame):
         options = ['Plate No. :', 'Vehicle Model', 'Color :']
         row = 1
         for i in range(3):
-            Label(self.top_left, text=options[i], font=self.font, background='#002b3c', fg='white').grid(row=row, column=0,
-                                                                                                      padx=10, pady=8,
-                                                                                                      sticky=E)
+            Label(self.top_left, text=options[i], font=self.font, background='#002b3c', fg='white').grid(row=row,
+                                                                                                         column=0,
+                                                                                                         padx=10,
+                                                                                                         pady=8,
+                                                                                                         sticky=E)
             row += 1
 
         self.plate_no_ent = Entry(self.top_left, width=30)
@@ -124,13 +125,15 @@ class Body(tk.Frame):
 
         # COUNTER WIDGETS:
 
-        self.spots = Label(self.top_right, text='Spots Left', font='Bahnschrift 15 bold', background='#002b3c', fg='white')
+        self.spots = Label(self.top_right, text='Spots Left', font='Bahnschrift 15 bold', background='#002b3c',
+                           fg='white')
         self.spots.grid(row=0, column=0, columnspan=2, padx=10, pady=10, sticky=W)
 
         self.no_spots = Label(self.top_right, text='', font='Bahnschrift 19 bold', background='#002b3c', fg='white')
         self.no_spots.grid(row=0, column=1, padx=10, pady=10, sticky=E)
 
-        self.tw = Label(self.top_right, text='Two-wheeler :', font='CenturyGothic 10 bold', background='#002b3c', fg='white')
+        self.tw = Label(self.top_right, text='Two-wheeler :', font='CenturyGothic 10 bold', background='#002b3c',
+                        fg='white')
         self.tw.grid(row=1, column=0, padx=10, pady=10, sticky=W)
 
         connect = sqlite3.connect('cps.db')
@@ -142,7 +145,8 @@ class Body(tk.Frame):
         self.no_tw = Label(self.top_right, text=spots[1], font='Bahnschrift 19 bold', background='#002b3c', fg='white')
         self.no_tw.grid(row=1, column=1, padx=10, pady=10, sticky=E)
 
-        self.fw = Label(self.top_right, text='Four-wheeler :', font='CenturyGothic 10 bold', background='#002b3c', fg='white')
+        self.fw = Label(self.top_right, text='Four-wheeler :', font='CenturyGothic 10 bold', background='#002b3c',
+                        fg='white')
         self.fw.grid(row=2, column=0, padx=10, pady=10, sticky=W)
 
         self.no_fw = Label(self.top_right, text=spots[0], font='Bahnschrift 19 bold', background='#002b3c', fg='white')
@@ -153,7 +157,7 @@ class Body(tk.Frame):
                               font='Bahnschrift 10 bold',
                               width=25,
                               fg='#023047', bg='#ecb365')
-        settings_btn.grid(row=3, column=0,columnspan=2, padx=10, pady=10, sticky='NEWS')
+        settings_btn.grid(row=3, column=0, columnspan=2, padx=10, pady=10, sticky='NEWS')
 
         connect.close()
 
@@ -207,21 +211,23 @@ class Body(tk.Frame):
         self.platenum = self.plate_no_ent.get().upper()
         self.vehicle_description = self.vehicle_desc.get().upper()
         self.color = self.color_ent.get().upper()
-        if (len(self.plate_no_ent.get()) == 0 or len(self.vehicle_desc.get()) == 0 or len(self.color_ent.get()) == 0 or self.radiobutton_value == None):
+        if (len(self.plate_no_ent.get()) == 0 or len(self.vehicle_desc.get()) == 0 or len(
+                self.color_ent.get()) == 0 or self.radiobutton_value == None):
             messagebox.showinfo('Error', 'Please fill the remaining entries')
             return
         timestamp = datetime.datetime.now().replace(microsecond=0)
-        
+
         connection = sqlite3.connect('cps.db')
         c = connection.cursor()
         try:
-            c.execute("INSERT INTO VEHICLE VALUES (?, ?, ?)" , (self.platenum, self.color, self.vehicle_description))
-            c.execute("INSERT INTO TICKET (plate_no,ticket_type, datetime_issued) VALUES(?, ?, ?)", (self.platenum, self.ticket_type, timestamp))
-            connection.commit() 
+            c.execute("INSERT INTO VEHICLE VALUES (?, ?, ?)", (self.platenum, self.color, self.vehicle_description))
+            c.execute("INSERT INTO TICKET (plate_no,ticket_type, datetime_issued) VALUES(?, ?, ?)",
+                      (self.platenum, self.ticket_type, timestamp))
+            connection.commit()
         except AttributeError:
             messagebox.showinfo('Error', 'Please fill the remaining entries')
             return
-            
+
         c.execute("SELECT ticket_no FROM TICKET WHERE ticket_no = (?)", (self.catch_last_ticket,))
         catch = c.fetchone()
         last_t = catch[0] + 1
@@ -234,9 +240,9 @@ class Body(tk.Frame):
         self.on_clickClear()
         self.reload()
         self.decrement_spots(self.ticket_type)
-        
+
         messagebox.showinfo('Success!', 'Ticket has been added')
-        
+
     def on_clickClear(self):
         self.plate_no_ent.delete(0, END)
         self.vehicle_desc.delete(0, END)
@@ -340,7 +346,7 @@ class Body(tk.Frame):
     def incrementTwSpots(self):
         tw_spots_left = 0
         tw_spots = 0
-        if self.tw_counter==0:
+        if self.tw_counter == 0:
             connect = sqlite3.connect('cps.db')
             c = connect.cursor()
             c.execute(
@@ -350,7 +356,7 @@ class Body(tk.Frame):
             tw_spots = spots[0]
             tw_spots_left = tw_spots + 1
             self.tw_next = tw_spots_left
-            
+
             self.no_tw.config(text=str(tw_spots_left))
 
             connect.commit()
@@ -364,7 +370,7 @@ class Body(tk.Frame):
     def incrementFwSpots(self):
         fw_spots_left = 0
         fw_spots = 0
-        if self.fw_counter==0:
+        if self.fw_counter == 0:
             connect = sqlite3.connect('cps.db')
             c = connect.cursor()
             c.execute(
@@ -374,9 +380,9 @@ class Body(tk.Frame):
             fw_spots = spots[0]
             fw_spots_left = fw_spots + 1
             self.fw_next = fw_spots_left
-            
+
             self.no_fw.config(text=str(fw_spots_left))
-            
+
             connect.commit()
             connect.close()
             self.fw_counter += 1
@@ -394,7 +400,7 @@ class Body(tk.Frame):
     def decrementTwSpots(self):
         tw_spots_left = 0
         tw_spots = 0
-        if self.tw_counter==0:
+        if self.tw_counter == 0:
             connect = sqlite3.connect('cps.db')
             c = connect.cursor()
             c.execute(
@@ -404,7 +410,7 @@ class Body(tk.Frame):
             tw_spots = spots[0]
             tw_spots_left = tw_spots - 1
             self.tw_next = tw_spots_left
-            
+
             self.no_tw.config(text=str(tw_spots_left))
 
             connect.commit()
@@ -418,7 +424,7 @@ class Body(tk.Frame):
     def decrementFwSpots(self):
         fw_spots_left = 0
         fw_spots = 0
-        if self.fw_counter==0:
+        if self.fw_counter == 0:
             connect = sqlite3.connect('cps.db')
             c = connect.cursor()
             c.execute(
@@ -428,9 +434,9 @@ class Body(tk.Frame):
             fw_spots = spots[0]
             fw_spots_left = fw_spots - 1
             self.fw_next = fw_spots_left
-            
+
             self.no_fw.config(text=str(fw_spots_left))
-            
+
             connect.commit()
             connect.close()
             self.fw_counter += 1
@@ -579,7 +585,7 @@ class Body(tk.Frame):
     def reloadTrigger(i):
         if i == 1:
             View.reload()
-    
+
     def timeOut(self):
         # Grab row number:
         selection = self.table.focus()
@@ -597,11 +603,11 @@ class Body(tk.Frame):
         connect.commit()
 
         # now and then datetime declaration:
-        #'''
+        # '''
         temp = dt_issued[0]
         dt_format = "%Y-%m-%d %H:%M:%S"
         then = datetime.datetime.strptime(temp, dt_format)
-        #'''
+        # '''
         now = timestamp
 
         # Datetime computation:
@@ -686,8 +692,6 @@ class Body(tk.Frame):
 
             messagebox.showinfo('Deleted', 'Deleted successfully')
             self.reload()
-
-
 
 
 if __name__ == '__main__':
